@@ -1,0 +1,188 @@
+Borg Multiobjective Evolutionary Algorithm
+By David Hadka and Patrick Reed
+
+--------------
+ Introduction
+--------------
+This package contains the C implementation of the Borg Multiobjective
+Evolutionary Algorithm (Borg MOEA).  This algorithm is described in detail in:
+
+	Hadka, D., and Reed, P.M.,"Borg: An Auto-Adaptive Many-Objective
+	Evolutionary Computing Framework." Evolutionary Computation, 2012.
+
+Please cite this reference in all academic papers and other publications
+which use or are based on these codes.
+
+------------------------------
+ Copyright and License Notice
+------------------------------
+Copyright 2012-2013 The Pennsylvania State University
+
+This software was written by David Hadka and others.
+
+The use, modification and distribution of this software is governed by the
+The Pennsylvania State University Research and Educational Use License.
+You should have received a copy of this license along with this program.
+If not, contact <preed@engr.psu.edu>.
+
+---------------
+ Patent Notice
+---------------
+Patent protection for the Borg MOEA is being pursued by the Pennsylvania
+State University including, but not limited to, United States patent 
+application number 13/356,391 (pending).
+
+--------------
+ Dependencies
+--------------
+These codes use the Mersenne Twister pseudo-random number generator by
+Takuji Nishimura and Makoto Matsumoto.  These codes are licensed under the
+Modified BSD license.  See the copyright and license notices in mt19937ar.c
+for details.
+
+-----------
+ Compiling
+-----------
+The core Borg C codes are ANSI C compliant, and can thus be compiled on any
+C compiler supporting the C89, C90, C99 or C11 standard.  The following
+commands build the libborg.a static library.
+
+	cc -Wall -O3 -o mt19937ar.o -c mt19937ar.c
+	cc -Wall -O3 -o borg.o -c borg.c -lm
+	ar rcs libborg.a borg.o mt19937ar.o
+
+Included in the source code distribution is an example program demonstrating
+the DTLZ2 multiobjective problem.  See the section 'Embedding in
+Programs' for details.  This example can be compiled using the following
+command.
+
+	cc -Wall -O3 -L. -o dtlz2_embedded.exe dtlz2_embedded.c -lborg -lm
+
+POSIX-compliant platforms, such as Unix, Linux and Cygwin, can optionally
+build a command line interface for the Borg MOEA using the command below.
+See the section 'Command Line Interface' for details.
+
+	cc -Wall -O3 -L. -o borg.exe frontend.c -lborg -lm
+
+All codes are also compliant with the ISO/IEC C++ 1998 and later standards,
+and can thus be compiled on any compatible C++ compiler.
+
+-----------------------
+ Embedding in Programs
+-----------------------
+The Borg MOEA can be embedded in applications by including the borg.h
+header.  See dtlz2_embedded.c for an example of embedding the Borg MOEA
+within a program, and refer to the section 'Compiling' for instructions
+on compiling such applications.  Documentation of the available methods
+are contained within the borg.h file.
+
+------------------------
+ Command Line Interface
+------------------------
+The command line interface allows the evaluation of MOEA Framework-compatible
+problem executables.  See the ExternalProblem documentation from the MOEA
+Framework library for more details.  The available options can be displayed
+using the -h option.
+
+	> ./borg.exe -h
+        Usage: ./borg.exe [options] executable
+
+        == Basic Options ==
+          -h          : Display help information
+          -v <value>  : Number of decision variables
+          -o <value>  : Number of objectives
+          -c <value>  : Number of constraints
+          -l <values> : Comma-separated list of decision variable lower bounds
+          -u <values> : Comma-separated list of decision variable upper bounds
+          -e <values> : Comma-separated list of epsilon values
+          -d <values> : Comma-separated list of direction flags (0=min, 1=max)
+          -C <option> : Constraints are feasible when (L=less than or equal to
+                        zero, G=greater than or equal to zero, E=equal to zero)
+          -f <file>   : Approximation set output file
+          -s <value>  : Pseudo-random number generator seed
+
+        == Single Run with Default Settings ==
+          -n <value>  : Maximum number of evaluations
+          -R <file>   : Runtime dynamics output file
+          -F <value>  : Frequency (NFE) for recording runtime dynamics
+
+        == Many Runs with Set Parameters ==
+          -p <file>   : Parameter description file
+          -i <file>   : Parameter input file
+
+        == Communicating over Sockets ==
+          -S          : Enable socket communication
+          -H <value>  : Host name or IP address (default is localhost)
+          -P <value>  : Port number (default is 16801)
+          -D <value>  : Startup delay (default is 1 sec)
+
+This interface supports two modes of execution: 1) a single run with default
+parameter settings; and 2) many runs using parameters loaded from an input
+file.  For example, using the example problem defined in dtlz2.c, first compile
+the problem executable with:
+
+	cc -Wall -O3 -o dtlz2.exe dtlz2.c moeaframework.c -lm 
+
+Notice how no reference to the Borg library is necessary; the compiler only
+needs the MOEA Framework C/C++ header.  Then, a single run with default
+parameter settings is evaluated using:
+
+	> ./borg.exe -n 10000 -v 11 -o 2 dtlz2.exe
+
+By default, the decision variable lower bounds and upper bounds are set to 0.0
+and 1.0, respectively.  Epsilons are set to 0.01 by default.  These default can
+be overwritten by specifying the appropriate command line options.
+
+If we have the parameter description file BORG_Params and the corresponding
+parameter samples in BORG_LHS, we can run all parameters using:
+
+	> ./borg.exe -p BORG_Params -i BORG_LHS -f output.dat -v 11 -o 2
+          dtlz2.exe
+
+The format of the parameter description file, parameter sample file and output
+file are compatible with the sensitivity analysis tools provided by the MOEA
+Framework library.  Refer to the MOEA Framework library documentation for
+details (http://www.moeaframework.org/).
+
+Command line options can be provided for the problem executable.  Note
+the use of -- to separate the end of the interface options and the start of
+the problem executable definition.
+
+	> ./borg.exe -n 10000 -v 13 -o 4 -- dtlz2.exe 13 4
+
+
+--------------------
+ Parallel Borg MOEA
+--------------------
+The master-slave (MS) Borg implementation requires MPI.  The specific
+instructions for compiling and running MPI programs on your system may vary
+from the instructions presented here.
+
+First, make sure your MPI implementation is loaded and configured correctly:
+
+	> module load openmpi
+
+Second, see borg_ms.c for an example of using the MS Borg MOEA.  The
+MS implementation requires you to implement your problem directly in the
+code in order to achieve the highest performance gain.  Adjust the nvars,
+nobjs, ncons, maxEvaluations, lowerBounds, upperBounds, and epsilons
+variables for your specific problem instance.  Modify the evaluate function
+to evaluate your problem instance.
+
+Third, run the make script to build the MS Borg implementation:
+
+	> make mpi
+
+Fourth, create a PBS script for your submission.  The contents of this script
+should appear similar to:
+
+	#PBS -l nodes=2:ppn=4
+	#PBS -l walltime=8:00:00
+	cd $PBS_O_WORKDIR
+	module load openmpi
+	mpirun dtlz2_ms.exe
+
+Lastly, submit this PBS script to your PBS system:
+
+	> qsub mstest.pbs
+
