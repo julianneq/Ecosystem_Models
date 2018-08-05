@@ -29,7 +29,7 @@ r_S = 2000 # growth coefficient from subsoil water (4000 in Walker et al.)
 d4 = 500 # half saturation effect of G on S
 K = 2 # proportional reducation of r_S at high x
 p = 0.1 # inefficiency of subsoil water use
-L_y = 1 # annual loss of wood vegeation by respiration and death
+L_y = 1 # annual loss of woody vegetation by respiration and death
 gamma = 1/alpha #
 delta = beta/alpha #
 
@@ -41,8 +41,9 @@ y0 = 2000 # initial woodland biomass
 
 # Control parameter determining anthropogenic inputs, U(B)
 # U(B)=1-u*B where U(B) is the manager's intervention and B is the backshift operator
-# u = 0.6 corresponds to a manager trying to minimize short-term variance
+# u = 0.07 corresponds to a manager trying to minimize short-term variance
 # u = 0.0 corresponds to a manager ignoring variance in their management strategy
+# u = 0.5 corresponds to a managers trying to increase short-term variance
 u = np.array([0.07, 0.0, -0.5])
 
 def grassland_sim(h, T, eps, burnin):
